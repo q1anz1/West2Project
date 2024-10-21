@@ -1,12 +1,8 @@
 package west2project.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tika.Tika;
-import org.apache.tika.io.TikaInputStream;
-import org.apache.tika.metadata.Metadata;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-import west2project.result.Result;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -14,13 +10,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Base64;
+import java.util.Date;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Component
 @Slf4j
-public class QianzUtil {
+public class SaveUtil {
 
     public boolean areAllNonEmpty(Object... objects) {
         for (Object o : objects) {
@@ -67,10 +62,11 @@ public class QianzUtil {
     public String changeFileName(MultipartFile file){
         String originalFileName = file.getOriginalFilename();
         String newFileName;
+        String uuid = System.currentTimeMillis()+String.valueOf(UUID.randomUUID());
         if (originalFileName != null) {
-            newFileName = UUID.randomUUID()+originalFileName.substring(originalFileName.lastIndexOf("."));
+            newFileName =  uuid+originalFileName.substring(originalFileName.lastIndexOf("."));
         }else {
-            newFileName = UUID.randomUUID().toString();
+            newFileName = uuid;
         }
         return newFileName;
     }

@@ -3,6 +3,7 @@ package west2project.service.videoServiceImpl;
 import cn.hutool.core.date.DateTime;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public class VideoServiceImpl implements VideoService {
     private final TikaUtil tikaUtil;
     private final JwtUtil jwtUtil;
     private final HttpServletRequest httpServletRequest;
-    private final QianzUtil qianzUtil;
+    private final SaveUtil saveUtil;
     private final RedisUtil redisUtil;
     private final PageUtil pageUtil;
 
@@ -54,8 +55,8 @@ public class VideoServiceImpl implements VideoService {
             return Result.error(isImageValid);
         }
         //存入本地
-        String videoUrl = qianzUtil.saveFileWithName(video, Contexts.VIDEO_BOX, qianzUtil.changeFileName(video));
-        String imageUrl = qianzUtil.saveFileWithName(image, Contexts.COVER_BOX, qianzUtil.changeFileName(image));
+        String videoUrl = saveUtil.saveFileWithName(video, Contexts.VIDEO_BOX, saveUtil.changeFileName(video));
+        String imageUrl = saveUtil.saveFileWithName(image, Contexts.COVER_BOX, saveUtil.changeFileName(image));
         //获取用户id
         Long userId = jwtUtil.getUserId(jwtUtil.getJwt(httpServletRequest));
         //存入数据库
@@ -102,11 +103,12 @@ public class VideoServiceImpl implements VideoService {
         Long userId = (Long) result.getData();
         //在数据库进行查询
         PageHelper.startPage(pageNum, pageSize);
-        Page<VideoInfoDTO> p = (Page<VideoInfoDTO>) videoMapper.searchVideoId(keywords, pageSize, pageNum, date1, date2, userId);
+        List<VideoInfoDTO> list = videoMapper.searchVideoId(keywords,date1, date2, userId,pageSize,(pageNum-1)*pageSize);
+        PageInfo<VideoInfoDTO> p = new PageInfo<>(list);
         //创建pageBean
         PageBean pageBean = new PageBean<>();
         pageBean.setTotalPage(p.getTotal());
-        pageBean.setData(p.getResult());
+        pageBean.setData(p.getList());
         if (pageBean.getData() == null || pageBean.getData().isEmpty()) {
             return Result.error("无结果");
         }

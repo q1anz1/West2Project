@@ -91,10 +91,11 @@ public class SocializingServiceImpl implements SocializingService {
         }
         PageBean pageBean = new PageBean<>();
         pageBean.setData(pageUtil.page(list,pageSize,pageNum));
-        pageBean.setTotalPage((long) pageBean.getData().size());
         if(pageBean.getData()==null){
             return Result.error("分页参数非法");
         }
+        pageBean.setTotalPage((long) pageBean.getData().size());
+
         return Result.success(pageBean);
     }
 
@@ -109,10 +110,11 @@ public class SocializingServiceImpl implements SocializingService {
         }
         PageBean pageBean = new PageBean<>();
         pageBean.setData(pageUtil.page(list,pageSize,pageNum));
-        pageBean.setTotalPage((long) pageBean.getData().size());
+
         if(pageBean.getData()==null){
             return Result.error("分页参数非法");
         }
+        pageBean.setTotalPage((long) pageBean.getData().size());
         return Result.success(pageBean);
     }
 }

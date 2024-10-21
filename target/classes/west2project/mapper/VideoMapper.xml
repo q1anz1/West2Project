@@ -19,7 +19,5 @@
                 and created_at &lt; #{toDate}
             </if>
         </where>
-        limit #{pageSize}
-        offset #{pageNum}
     </select>
 </mapper>

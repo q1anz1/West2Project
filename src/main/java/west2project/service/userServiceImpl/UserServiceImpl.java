@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
     private final West2RandomUtil west2RandomUtil;
-    private final QianzUtil qianzUtil;
+    private final SaveUtil saveUtil;
     private final HttpServletRequest  httpServletRequest;
     private final JwtUtil jwtUtil;
     private final TikaUtil tikaUtil;
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
     @Override//注册
     public Result addUser(RegisterDTO registerDTO) {
         //验证是否有空值
-        if (!qianzUtil.areAllFieldsNonNullOrEmpty(registerDTO)) {
+        if (!saveUtil.areAllFieldsNonNullOrEmpty(registerDTO)) {
             return Result.error("有未设置参数");
         }
         //验证邮箱是否合法
@@ -115,7 +115,7 @@ public class UserServiceImpl implements UserService {
         }
 
         UserInfoVO user = (UserInfoVO) result.getData();
-        user.setAvatarUrl(qianzUtil.imageToBase64(user.getAvatarUrl()));
+        user.setAvatarUrl(saveUtil.imageToBase64(user.getAvatarUrl()));
         return Result.success(user);
     }
 
@@ -124,10 +124,10 @@ public class UserServiceImpl implements UserService {
         String jwt = jwtUtil.getJwt(httpServletRequest);
         String jwtUUID= jwtUtil.getUUID(jwt);
         if (jwtUUID == null) {
-            return Result.error("未登入怎么能登出呢！！");
+            return Result.error("未登入无法登出呢");
         }
         if(!jwtUtil.verifyToken(jwt)){
-            return Result.error("这个令牌。。是你伪造的吧。。ﾍ(;´Д｀ﾍ)");
+            return Result.error("令牌错误");
         }
         jwtUtil.blackList(jwt);
         return Result.success();
@@ -139,9 +139,8 @@ public class UserServiceImpl implements UserService {
         if(!isValid.equals("true")){
             return Result.error(isValid);
         }
-
         //保存图片到本地
-        String imageUrl= qianzUtil.saveFileWithName(file, Contexts.DEFAULT_AVATAR_BOX,qianzUtil.changeFileName(file));
+        String imageUrl= saveUtil.saveFileWithName(file, Contexts.DEFAULT_AVATAR_BOX, saveUtil.changeFileName(file));
         //保存图片到数据库
         String jwt=jwtUtil.getJwt(httpServletRequest);
         Long id = jwtUtil.getUserId(jwt);

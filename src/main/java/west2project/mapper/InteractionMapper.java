@@ -3,6 +3,7 @@ package west2project.mapper;
 import org.apache.ibatis.annotations.*;
 import west2project.pojo.DO.videos.CommentDO;
 import west2project.pojo.DO.videos.VideoDO;
+import west2project.pojo.DTO.LikeDTO;
 
 import java.util.Date;
 import java.util.List;
@@ -10,9 +11,11 @@ import java.util.List;
 @Mapper
 public interface InteractionMapper {
 
-    @Insert("insert into west2_online_project.video_like(video_id, user_id) values (#{videoId},#{userId})")
-    void saveVideoLike(Long videoId,Long userId);
 
+    void saveVideoLike(List<LikeDTO> list);
+    void saveCommentLike(List<LikeDTO> list);
+    @Delete("delete from west2_online_project.video_like where user_id=#{userId} and video_id = #{videoId}")
+    void deleteVideoLike(Long videoId,Long userId);
     @Select("select video_id from west2_online_project.video_like where user_id=#{userId}")
     List<Long> findVideoLike(Long userId);
 
@@ -26,16 +29,11 @@ public interface InteractionMapper {
     @Select("select id, user_id, video_id, parent_id, like_count, child_count, content, created_at, updated_at, deleted_at" +
             " from west2_online_project.comment where id =#{videoId}")
     CommentDO findCommentDO(Long commentId);
-    @Insert("insert into west2_online_project.comment_like(comment_id, user_id) values (#{commentId},#{userId})")
-    void saveCommentLike(Long commentId,Long userId);
+
+
 
     @Select("select id from west2_online_project.comment_like where user_id=#{userId}")
     List<Long> findCommentLike(Long userId);
-    @Delete("delete from west2_online_project.video_like where user_id=#{userId} and video_id=#{videoId}")
-    void removeVideoLike(Long videoId,Long userId);
-    @Delete("delete from west2_online_project.comment_like where user_id=#{userId} and comment_id=#{commentId}")
-    void removeCommentLike(Long commentId,Long userId);
-
     @Update("update west2_online_project.video set visit_count=#{visitCount},like_count=#{likeCount},comment_count=#{commentCount}" +
             " where id=#{id}")
     void updateVideoVisitCount(Long id,Integer visitCount,Integer likeCount,Integer commentCount);

@@ -24,7 +24,7 @@ public interface VideoMapper {
     @Select("select id from west2_online_project.video where video_url=#{videoUrl}")
     Long findVideoId(String videoUrl);
 
-    List<VideoInfoDTO> searchVideoId(String keywords, Integer pageSize, Integer pageNum, Date fromDate, Date toDate, Long userId);
+    List<VideoInfoDTO> searchVideoId(String keywords, Date fromDate, Date toDate, Long userId,Integer pageSize, Integer pageNum);
 
     @Select("select id from west2_online_project.user where username=#{username}")
     Long findUserId(String username);

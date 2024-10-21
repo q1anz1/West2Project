@@ -61,6 +61,9 @@ public class InteractionServiceImpl implements InteractionService {
                     redisUtil.writeJsonWithTTL(Contexts.CACHE_VIDEO_LIKE, userId, followList, Contexts.CACHE_VIDEO_COMMENT_LIKE_TTL);
                     // 点赞数+1
                     videoDO.setLikeCount(videoDO.getLikeCount() + 1);
+
+                    redisUtil.rightPushList(Contexts.TASK,"likeVideo",userId);
+
                 } else {//视频取消点赞
                     if (!followList.contains(videoId)) {
                         return Result.error("未点赞，无法取消点赞");
@@ -71,8 +74,10 @@ public class InteractionServiceImpl implements InteractionService {
                     redisUtil.writeJsonWithTTL(Contexts.CACHE_VIDEO_LIKE, userId, followList, Contexts.CACHE_VIDEO_COMMENT_LIKE_TTL);
                     // 点赞数-1
                     videoDO.setLikeCount(videoDO.getLikeCount() - 1);
+                    redisUtil.rightPushList(Contexts.TASK,"dislikeVideo",userId);
                 }
                 //加入写入数据库队列
+
                 redisUtil.rightPushList(Contexts.TASK, "visitVideo", videoId);
             } else {//评论操作
                 //判断评论是否存在
@@ -97,6 +102,7 @@ public class InteractionServiceImpl implements InteractionService {
                     redisUtil.writeJsonWithTTL(Contexts.CACHE_COMMENT_LIKE, userId, followList, Contexts.CACHE_VIDEO_COMMENT_LIKE_TTL);
                     //点赞数+1
                     followList.add(commentId);
+                    redisUtil.rightPushList(Contexts.TASK,"likeComment",userId);
                 } else {//评论取消点赞
                     if (!followList.contains(commentId)) {
                         return Result.error("未点赞，无法取消点赞");
@@ -106,9 +112,12 @@ public class InteractionServiceImpl implements InteractionService {
                     redisUtil.writeJsonWithTTL(Contexts.CACHE_COMMENT_LIKE, userId.toString(), followList, Contexts.CACHE_VIDEO_COMMENT_LIKE_TTL);
                     //点赞数-1
                     followList.remove(commentId);
+                    redisUtil.rightPushList(Contexts.TASK,"dislikeComment",userId);
                 }
                 //加入写入数据库队列
+
                 redisUtil.rightPushList(Contexts.TASK, "visitComment", commentDO.getId());
+
             }
         } finally {
             lock.unlock();
@@ -139,10 +148,10 @@ public class InteractionServiceImpl implements InteractionService {
         //分页查找
         PageBean pageBean = new PageBean<>();
         pageBean.setData(pageUtil.page(list, pageSize, pageNum));
-        pageBean.setTotalPage((long) pageBean.getData().size());
         if (pageBean.getData() == null) {
             return Result.error("分页参数非法");
         }
+        pageBean.setTotalPage((long) pageBean.getData().size());
         return Result.success(pageBean);
     }
 
@@ -259,7 +268,7 @@ public class InteractionServiceImpl implements InteractionService {
         List<CommentDO> list = new ArrayList<>();
         //去除被逻辑删除的评论
         for (CommentDO commentDO : list1) {
-            if(commentDO.getDeletedAt() != null){
+            if(commentDO.getDeletedAt() == null){
                 list.add(commentDO);
             }
         }
@@ -268,10 +277,10 @@ public class InteractionServiceImpl implements InteractionService {
         }
         PageBean<CommentDO> pageBean = new PageBean<>();
         pageBean.setData(pageUtil.page(list, pageSize, pageNum));
-        pageBean.setTotalPage((long) pageBean.getData().size());
         if (pageBean.getData() == null) {
             return Result.error("分页参数非法");
         }
+        pageBean.setTotalPage((long) pageBean.getData().size());
         return Result.success(list);
     }
 
