@@ -1,0 +1,8 @@
+hm:
+  db:
+    host: mysql
+    pw: 123456
+
+  re:
+    host: redis
+    pw: 12345

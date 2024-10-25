@@ -1,17 +1,16 @@
 server:
   port: 8080
-
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/west2_online_project
+    url: jdbc:mysql://${hm.db.host}}:3306/west2_online_project
     username: root
-    password: 123456
+    password: ${hm.db.pw}
   data:
     redis:
-      host: 127.0.0.1
+      host: ${hm.re.host}
       port: 6379
-      password: 123456
+      password: ${hm.re.pw}
       lettuce:
         pool:
           max-active: 8
@@ -54,5 +53,3 @@ mybatis:
   mapper-locations: mybatis/mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
-
-
