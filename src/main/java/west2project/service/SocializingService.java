@@ -10,4 +10,5 @@ public interface SocializingService {
     Result fanList(Long userId, Integer pageNum, Integer pageSize);
 
     Result friendList(Integer pageNum, Integer pageSize);
+
 }

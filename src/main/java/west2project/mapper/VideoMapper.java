@@ -4,9 +4,8 @@ import cn.hutool.core.date.DateTime;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
-import west2project.pojo.DO.videos.VideoDO;
-import west2project.pojo.DTO.videos.VideoInfoDTO;
+import west2project.pojo.DO.video.VideoDO;
+import west2project.pojo.DTO.video.VideoInfoDTO;
 
 import java.util.Date;
 import java.util.List;

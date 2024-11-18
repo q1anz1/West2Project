@@ -3,8 +3,8 @@ package west2project.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-import west2project.pojo.DO.users.UserDO;
-import west2project.pojo.DO.videos.VideoDO;
+import west2project.pojo.DO.user.UserDO;
+import west2project.pojo.DO.video.VideoDO;
 
 import java.util.Date;
 

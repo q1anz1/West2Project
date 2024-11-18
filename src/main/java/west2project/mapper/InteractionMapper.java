@@ -1,8 +1,8 @@
 package west2project.mapper;
 
 import org.apache.ibatis.annotations.*;
-import west2project.pojo.DO.videos.CommentDO;
-import west2project.pojo.DO.videos.VideoDO;
+import west2project.pojo.DO.video.CommentDO;
+import west2project.pojo.DO.video.VideoDO;
 import west2project.pojo.DTO.LikeDTO;
 
 import java.util.Date;

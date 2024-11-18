@@ -27,4 +27,5 @@ public interface SocializingMapper {
             "join west2_online_project.follow f2 on f1.follower_id=f2.up_id and f1.up_id=f2.follower_id " +
             "where f1.follower_id=#{userId}")
     List<Long> selectFriendId(Long userId);
+
 }

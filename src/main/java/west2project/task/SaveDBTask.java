@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import west2project.context.Contexts;
+import west2project.context.RedisContexts;
 import west2project.mapper.InteractionMapper;
-import west2project.pojo.DO.users.UserDO;
-import west2project.pojo.DO.videos.CommentDO;
-import west2project.pojo.DO.videos.VideoDO;
+import west2project.pojo.DO.user.UserDO;
+import west2project.pojo.DO.video.CommentDO;
+import west2project.pojo.DO.video.VideoDO;
 import west2project.pojo.DTO.LikeDTO;
-import west2project.utils.RedisUtil;
+import west2project.util.RedisUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,17 +20,16 @@ import java.util.function.Consumer;
 @Component
 @RequiredArgsConstructor
 public class SaveDBTask {
-    private final RedisUtil redisUtil;
     private final InteractionMapper interactionMapper;
-
+    private final RedisUtil redisUtil;
     @Scheduled(fixedRate = 50000)//单位为毫秒
     public void saveVideoVisitCountLikeCount(){
-        Object obj =redisUtil.leftPopList(Contexts.TASK,"visitVideo");
+        Object obj = redisUtil.leftPopList(RedisContexts.TASK,"visitVideo", Object.class);
         if (obj != null){
             log.info("visitVideo队列-1");
             Long videoId = Long.parseLong(obj.toString());
             //获得redis中的video
-            VideoDO videoDO = redisUtil.findJson(Contexts.CACHE_VIDEODO,videoId, VideoDO.class);
+            VideoDO videoDO = RedisUtil.findJson(RedisContexts.CACHE_VIDEODO,videoId, VideoDO.class);
             //获取 点赞，评论，观看量,保存到数据库
             interactionMapper.updateVideoVisitCount(videoId,videoDO.getVisitCount(),videoDO.getLikeCount(),videoDO.getCommentCount());
             //循环调用
@@ -39,12 +38,12 @@ public class SaveDBTask {
     }
     @Scheduled(fixedRate = 50000)//单位为毫秒
     public void saveCommentVisitCountLikeCount(){
-        Object obj =redisUtil.leftPopList(Contexts.TASK,"visitComment");
+        Object obj = redisUtil.leftPopList(RedisContexts.TASK,"visitComment",Object.class);
         if (obj != null){
             log.info("visitComment队列-1");
             Long commentId = Long.parseLong(obj.toString());
             //获得redis中的comment
-            CommentDO commentDO = redisUtil.findJson(Contexts.CACHE_COMMENTDO,commentId, CommentDO.class);
+            CommentDO commentDO = RedisUtil.findJson(RedisContexts.CACHE_COMMENTDO,commentId, CommentDO.class);
             //保存到数据库
             interactionMapper.updateCommentVisitCount(commentId,commentDO.getLikeCount(),commentDO.getChildCount(),commentDO.getDeletedAt());
             //循环调用
@@ -53,12 +52,12 @@ public class SaveDBTask {
     }
     @Scheduled(fixedRate = 50000)//单位为毫秒
     public void saveUserInfo(){
-        Object obj =redisUtil.leftPopList(Contexts.TASK,"visitUserInfo");
+        Object obj = redisUtil.leftPopList(RedisContexts.TASK,"visitUserInfo",Object.class);
         if (obj != null){
             log.info("visitUserInfo队列-1");
             Long userId = Long.parseLong(obj.toString());
             //获得redis中的
-            UserDO userDO = redisUtil.findJson(Contexts.CACHE_USERDO,userId, UserDO.class);
+            UserDO userDO = RedisUtil.findJson(RedisContexts.CACHE_USERDO,userId, UserDO.class);
             //保存到数据库
             interactionMapper.updateUserVisitCount(userId,userDO.getAvatarUrl());
             //循环调用
@@ -67,21 +66,21 @@ public class SaveDBTask {
     }
     @Scheduled(fixedRate = 50000)//单位为毫秒
     public void saveLikeVideo(){
-        saveLike("likeVideo",Contexts.CACHE_VIDEO_LIKE,interactionMapper::saveVideoLike);
+        saveLike("likeVideo", RedisContexts.CACHE_VIDEO_LIKE,interactionMapper::saveVideoLike);
     }
     @Scheduled(fixedRate = 50000)//单位为毫秒
     public void saveDislikeVideo(){
-        Object obj =redisUtil.leftPopList(Contexts.TASK,"dislikeVideo");
+        Object obj = redisUtil.leftPopList(RedisContexts.TASK,"dislikeVideo",Object.class);
         if (obj != null){
             log.info("dislike队列-1");
             Long userId = Long.parseLong(obj.toString());
             //获得redis中的
-            List<Long> targetIdList = redisUtil.findJsonList(Contexts.CACHE_VIDEO_LIKE, userId, Long.class);
+            List<Long> targetIdList = RedisUtil.findJsonList(RedisContexts.CACHE_VIDEO_LIKE, userId, Long.class);
             if (targetIdList.isEmpty()){
                 return;
             }
-            for (int i = 0; i < targetIdList.size(); i++) {
-                interactionMapper.deleteVideoLike(targetIdList.get(i), userId);
+            for (Long aLong : targetIdList) {
+                interactionMapper.deleteVideoLike(aLong, userId);
             }
             //循环调用
             saveDislikeVideo();
@@ -89,12 +88,12 @@ public class SaveDBTask {
     }
 
     public void saveLike(String key, String cacheKey, Consumer<List<LikeDTO>> db){
-        Object obj =redisUtil.leftPopList(Contexts.TASK,key);
+        Object obj = redisUtil.leftPopList(RedisContexts.TASK,key,Object.class);
         if (obj != null){
             log.info("like队列-1");
             Long userId = Long.parseLong(obj.toString());
             //获得redis中的
-            List<Long> targetIdList = redisUtil.findJsonList(cacheKey, userId, Long.class);
+            List<Long> targetIdList = RedisUtil.findJsonList(cacheKey, userId, Long.class);
             if (targetIdList.isEmpty()){
                 return;
             }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="west2project.mapper.FriendMapper">
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO west2_online_project.friend (user_id_1, user_id_2)
+        VALUES
+        <foreach collection="list" item="friendDO" separator=",">
+            (#{friendDO.userId1}, #{friendDO.userId2})
+        </foreach>
+    </insert>
+
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM west2_online_project.friend
+        WHERE
+            (friend.user_id_1 IN
+        <foreach item="friendDO" collection="list" open="(" separator="," close=")">
+            #{friendDO.userId1}
+        </foreach>
+            AND friend.user_id_2 IN
+        <foreach item="friendDO" collection="list" open="(" separator="," close=")">
+            #{friendDO.userId2}
+        </foreach>)
+        OR
+            (friend.user_id_1 IN
+        <foreach item="friendDO" collection="list" open="(" separator="," close=")">
+            #{friendDO.userId1}
+        </foreach>
+            AND friend.user_id_2 IN
+        <foreach item="friendDO" collection="list" open="(" separator="," close=")">
+            #{friendDO.userId2}
+        </foreach>)
+
+    </delete>
+
+</mapper>
+
+

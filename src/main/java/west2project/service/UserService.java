@@ -1,7 +1,7 @@
 package west2project.service;
 
 import org.springframework.web.multipart.MultipartFile;
-import west2project.pojo.DTO.users.RegisterDTO;
+import west2project.pojo.DTO.user.RegisterDTO;
 import west2project.result.Result;
 
 public interface UserService {

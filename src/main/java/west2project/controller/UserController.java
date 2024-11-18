@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import west2project.pojo.DTO.users.RegisterDTO;
+import west2project.pojo.DTO.user.RegisterDTO;
 import west2project.result.Result;
 import west2project.service.UserService;
 

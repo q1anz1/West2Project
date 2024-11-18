@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="west2project.mapper.InteractionMapper">
+    <!--    这里设置了在插入时返回主键到对象的id-->
+    <insert id="saveCommentDO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO west2_online_project.comment(user_id, video_id, parent_id,content, created_at, updated_at)
+        VALUES (#{userId},#{videoId},#{parentId},#{content},#{createdAt},#{updatedAt})
+    </insert>
+
+    <insert id="saveVideoLike" parameterType="java.util.List">
+        INSERT INTO west2_online_project.video_like (video_id, user_id)
+        VALUES
+        <foreach collection="list" item="likeDTO" separator=",">
+            (#{likeDTO.targetId},#{likeDTO.userId})
+        </foreach>
+    </insert>
+    <insert id="saveCommentLike" parameterType="java.util.List">
+        INSERT INTO west2_online_project.comment_like (comment_id, user_id)
+        VALUES
+        <foreach collection="list" item="likeDTO" separator=",">
+            (#{likeDTO.targetId},#{likeDTO.userId})
+        </foreach>
+    </insert>
+
+</mapper>
+
+

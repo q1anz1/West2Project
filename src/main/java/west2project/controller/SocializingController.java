@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import west2project.result.Result;
 import west2project.service.SocializingService;
-import west2project.service.socializingServiceImpl.SocializingServiceImpl;
 
 @Slf4j
 @RestController

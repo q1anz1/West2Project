@@ -13,7 +13,7 @@ public class Result<T> implements Serializable {
     public static<T> Result<T> success() {
         Result<T>result= new Result<>();
         Base base=new Base();
-        base.setCode(1000);
+        base.setCode(200);
         base.setMsg("success");
         result.setBase(base);
         return result;
@@ -21,7 +21,7 @@ public class Result<T> implements Serializable {
     public static<T> Result<T> success(T object) {
         Result<T> result= new Result<>();
         Base base=new Base();
-        base.setCode(1000);
+        base.setCode(200);
         base.setMsg("success");
         result.setBase(base);
         result.setData(object);
@@ -33,6 +33,32 @@ public class Result<T> implements Serializable {
         Base base=new Base();
         base.setCode(-1);
         base.setMsg(msg);
+        result.setBase(base);
+        return result;
+    }
+
+    /*
+    * 以下为正确的，上面code全是1000或者-1
+    * */
+
+    public static<T> Result<T> success(int code) {
+        Result<T>result= new Result<>();
+        Base base=new Base(code,"success");
+        result.setBase(base);
+        return result;
+    }
+
+    public static<T> Result<T> success(int code,T object) {
+        Result<T> result= new Result<>();
+        Base base=new Base(code,"success");
+        result.setBase(base);
+        result.setData(object);
+        return result;
+    }
+
+    public static<T> Result<T> error(int code,String msg) {
+        Result<T> result= new Result<>();
+        Base base=new Base(code,msg);
         result.setBase(base);
         return result;
     }

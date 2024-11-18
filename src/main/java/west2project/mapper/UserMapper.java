@@ -5,8 +5,8 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-import west2project.pojo.DO.users.UserDO;
-import west2project.pojo.VO.users.UserInfoVO;
+import west2project.pojo.DO.user.UserDO;
+import west2project.pojo.VO.user.UserInfoVO;
 
 import java.util.Date;
 
