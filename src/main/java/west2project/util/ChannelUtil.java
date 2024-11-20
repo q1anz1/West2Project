@@ -40,11 +40,6 @@ public class ChannelUtil {
     private final UserMapper userMapper;
     private final FriendMapper friendMapper;
 
-    // 是否在线
-    public static boolean isUserOnline(Long userId) {
-        return USER_CONTEXT_MAP.containsKey(userId);
-    }
-
     // 发送消息
     public static boolean sendMsg(Result<?> result, Long receiverId) {
         if (receiverId == null) return false;
@@ -78,16 +73,17 @@ public class ChannelUtil {
         // 最后一条消息在最近30天内的session
         wsInitMsg.setSessionVOList(getSessionVOList(userId));
         // 好友列表
-        wsInitMsg.setFriendUserInfoVOList(getUserInfoVOList(userId));
+        wsInitMsg.setFriendUserInfoVOList(getFriendUserInfoVOList(userId));
         // 群聊列表
-        wsInitMsg.setGroupVOList(getGroupVO(userId));
+        wsInitMsg.setGroupVOList(getGroupVOList(userId));
         return wsInitMsg;
     }
 
     // 返回最后一条消息在最近30天内的所有群和好友的session
-    private List<SessionVO> getSessionVOList(Long userId) {
+    public List<SessionVO> getSessionVOList(Long userId) {
         List<SessionVO> sessionVOList = new ArrayList<>();
-        for (SessionDO sDO : sessionMapper.selectSessionDOListLast30DaysByUserId(userId)) {
+        List<SessionDO> sessionDOList = sessionMapper.selectSessionDOListLast30DaysByUserId(userId);
+        for (SessionDO sDO : sessionDOList) {
             if (sDO.getGroupId() != null) {
                 // 是群session
                 Result<?> result = RedisUtil.findJsonWithCache(CACHE_GROUPDO, sDO.getGroupId(), GroupDO.class, groupMapper::selectGroupDOByGroupId, CACHE_GROUPDO_TTL);
@@ -112,9 +108,9 @@ public class ChannelUtil {
     }
 
     // 返回该用户所有的彭油，爱情不是冰红茶
-    private List<UserInfoVO> getUserInfoVOList(Long userId) {
+    private List<UserInfoVO> getFriendUserInfoVOList(Long userId) {
         List<UserInfoVO> friendUserInfoList = new ArrayList<>();
-        for (Long friendId: friendMapper.selectFriendIdByUserId(userId)) {
+        for (Long friendId: friendMapper.selectFriendIdListByUserId(userId)) {
             Result<?> result = RedisUtil.findJsonWithCache(CACHE_USER_INFO, friendId, UserInfoVO.class, userMapper::findUserInfoVOByUserId, CACHE_USER_INFO_TTL);
             friendUserInfoList.add((UserInfoVO) result.getData());
         }
@@ -122,7 +118,7 @@ public class ChannelUtil {
     }
 
     // 返回该用户所有群聊
-    private List<GroupVO> getGroupVO(Long userId) {
+    private List<GroupVO> getGroupVOList(Long userId) {
         List<GroupVO> groupVOList  = new ArrayList<>();
         for (GroupDO DO: groupMapper.selectGroupDOListByUserId(userId)) {
             groupVOList.add(new GroupVO(DO.getId(), DO.getGroupName(), DO.getLeaderId(), DO.getText() ,DO.getAvatarUrl() ,DO.getCount()));

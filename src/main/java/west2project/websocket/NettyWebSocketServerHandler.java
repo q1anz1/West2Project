@@ -2,7 +2,6 @@ package west2project.websocket;
 
 
 import cn.hutool.extra.spring.SpringUtil;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -10,10 +9,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
-import west2project.service.NettyWebSocketService;
 import west2project.util.ChannelUtil;
 import west2project.util.JwtUtil;
 
@@ -23,14 +19,12 @@ import java.util.Objects;
 @ChannelHandler.Sharable
 
 public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
-    private NettyWebSocketService nettyWebSocketService;
     private ChannelUtil channelUtil;
 
     // 在管道连接时，注入bean，由于不是spring创建的，自动注入用不了，只能手动注
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         this.channelUtil = SpringUtil.getBean(ChannelUtil.class);
-        this.nettyWebSocketService = SpringUtil.getBean(NettyWebSocketService.class);
     }
 
     //channel连接

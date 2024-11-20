@@ -10,10 +10,6 @@ public class MyDisposableBean implements DisposableBean {
     private final SaveDBTask saveDBTask;
     @Override
     public void destroy() {
-        saveDBTask.saveCommentVisitCountLikeCount();
-        saveDBTask.saveVideoVisitCountLikeCount();
-        saveDBTask.saveUserInfo();
-        saveDBTask.saveLikeVideo();
-        saveDBTask.saveDislikeVideo();
+
     }
 }

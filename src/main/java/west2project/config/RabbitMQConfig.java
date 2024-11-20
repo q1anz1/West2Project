@@ -1,6 +1,8 @@
 package west2project.config;
 
+import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -20,12 +22,32 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue createFlushFriendQueue() {
+    public Queue getFlushFriendQueue() {
         return new Queue("flush.friend.queue", true, false, false);
     }
 
     @Bean
-    public Queue createSaveChatMsgQueue() {
+    public Queue getSaveChatMsgQueue() {
         return new Queue("save.chat.queue", true, false, false);
+    }
+
+    @Bean
+    public Queue getVisitVideoQueue() {
+        return new Queue("visit.video.queue", true, false, false);
+    }
+
+    @Bean
+    public Queue getVisitCommentQueue() {
+        return new Queue("visit.comment.queue", true, false, false);
+    }
+
+    @Bean
+    public Queue getLikeVideoQueue() {
+        return new Queue("like.video.queue", true, false, false);
+    }
+
+    @Bean
+    public Queue getDislikeVideoQueue() {
+        return new Queue("dislike.video.queue", true, false, false);
     }
 }

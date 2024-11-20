@@ -2,6 +2,7 @@ package west2project.chat.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,5 +24,14 @@ public class ChatController {
         return chatService.sendMessage(userId, groupId, text, picture);
     }
 
+    @GetMapping("/session/list/get")
+    public Result<?> getSessionList() {
+        return chatService.getSessionList();
+    }
 
+    @PostMapping("/session/new")
+    public Result<?> newSession(@RequestParam(value = "user_id", required = false)Long userId,
+                                @RequestParam(value = "group_id", required = false)Long groupId) {
+        return chatService.newSession(userId, groupId);
+    }
 }

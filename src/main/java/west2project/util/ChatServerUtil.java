@@ -28,7 +28,7 @@ public class ChatServerUtil {
         Result<?> result = RedisUtil.findJsonListWithCache(RedisContexts.CACHE_FRIEND,userId, Long.class,socializingMapper::selectFriendId, RedisContexts.CACHE_FOLLOW_FAN_TTL);
         Set<Long> followSet = new HashSet<>(((List<Long>)result.getData()));
         // 获取表friend中的朋友
-        Set<Long> friendSet = new HashSet<>(friendMapper.selectFriendIdByUserId(userId));
+        Set<Long> friendSet = new HashSet<>(friendMapper.selectFriendIdListByUserId(userId));
         // 找出朋友增加了哪些，减少了哪些
         Set<Long> addSet = new HashSet<>(followSet);
         addSet.removeAll(friendSet);

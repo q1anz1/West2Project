@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="west2project.mapper.SessionMapper">
+    <!--    这里设置了在插入时返回主键到对象的id-->
+    <insert id="saveSessionDO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO west2_online_project.session(user_id_1, user_id_2, group_id, last_message, updated_at)
+        VALUES(#{userId1},#{userId2},#{groupId},#{lastMessage},#{updatedAt})
+    </insert>
+
+</mapper>

@@ -56,7 +56,8 @@ public class NettyWebSocketServer {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new IdleStateHandler(30, 0, 0));
+                        // TODO 修改心跳时间
+                        pipeline.addLast(new IdleStateHandler(300, 0, 0));
                         pipeline.addLast(new HttpServerCodec());
                         pipeline.addLast(new ChunkedWriteHandler());
                         pipeline.addLast(new HttpObjectAggregator(65536));

@@ -10,6 +10,7 @@ import west2project.mapper.InteractionMapper;
 import west2project.pojo.DO.video.CommentDO;
 import west2project.pojo.DO.video.VideoDO;
 import west2project.pojo.VO.PageBean;
+import west2project.rabbitmq.SaveDBQueues;
 import west2project.result.Result;
 import west2project.service.InteractionService;
 import west2project.util.JwtUtil;
@@ -29,6 +30,7 @@ public class InteractionServiceImpl implements InteractionService {
     private final HttpServletRequest httpServletRequest;
     private final InteractionMapper interactionMapper;
     private final RedisUtil redisUtil;
+    private final SaveDBQueues saveDBQueues;
     private final ReentrantLock lock = new ReentrantLock();
 
     @Override
@@ -61,9 +63,7 @@ public class InteractionServiceImpl implements InteractionService {
                     RedisUtil.writeJsonWithTTL(RedisContexts.CACHE_VIDEO_LIKE, userId, followList, RedisContexts.CACHE_VIDEO_COMMENT_LIKE_TTL);
                     // 点赞数+1
                     videoDO.setLikeCount(videoDO.getLikeCount() + 1);
-
-                    redisUtil.rightPushList(RedisContexts.TASK,"likeVideo",userId);
-
+                    saveDBQueues.sendLikeVideoQueue(userId);
                 } else {//视频取消点赞
                     if (!followList.contains(videoId)) {
                         throw new ArgsInvalidException("未点赞，无法取消点赞");
@@ -74,11 +74,10 @@ public class InteractionServiceImpl implements InteractionService {
                     RedisUtil.writeJsonWithTTL(RedisContexts.CACHE_VIDEO_LIKE, userId, followList, RedisContexts.CACHE_VIDEO_COMMENT_LIKE_TTL);
                     // 点赞数-1
                     videoDO.setLikeCount(videoDO.getLikeCount() - 1);
-                    redisUtil.rightPushList(RedisContexts.TASK,"dislikeVideo",userId);
+                    saveDBQueues.sendDislikeVideoQueue(userId);
                 }
                 //加入写入数据库队列
-
-                redisUtil.rightPushList(RedisContexts.TASK, "visitVideo", videoId);
+                saveDBQueues.sendVisitVideoQueue(videoId);
             } else {//评论操作
                 //判断评论是否存在
                 //
@@ -115,8 +114,7 @@ public class InteractionServiceImpl implements InteractionService {
                     redisUtil.rightPushList(RedisContexts.TASK,"dislikeComment",userId);
                 }
                 //加入写入数据库队列
-
-                redisUtil.rightPushList(RedisContexts.TASK, "visitComment", commentDO.getId());
+                saveDBQueues.sendVisitCommentQueue(commentDO.getId());
 
             }
         } finally {
@@ -182,8 +180,8 @@ public class InteractionServiceImpl implements InteractionService {
                 videoDO.setCommentCount(videoDO.getCommentCount() + 1);
                 RedisUtil.writeJsonWithTTL(RedisContexts.CACHE_COMMENTDO, videoDO.getId(), videoDO, RedisContexts.CACHE_COMMENTDO_TTL);
                 //加入存数据库队列
-                redisUtil.rightPushList(RedisContexts.TASK, "visitComment", commentDO.getId());
-                redisUtil.rightPushList(RedisContexts.TASK, "visitVideo", videoDO.getId());
+                saveDBQueues.sendVisitCommentQueue(commentDO.getId());
+                saveDBQueues.sendVisitVideoQueue(videoDO.getId());
                 //更新视频的评论列表
                 List<CommentDO> commentList = RedisUtil.findJsonList(RedisContexts.CACHE_COMMENT_LIST_VIDEO, videoId, CommentDO.class);
                 commentList.add(commentDO);
@@ -208,8 +206,8 @@ public class InteractionServiceImpl implements InteractionService {
                 parentDO.setChildCount(parentDO.getChildCount() + 1);
                 RedisUtil.writeJsonWithTTL(RedisContexts.CACHE_COMMENTDO, parentDO.getId(), parentDO, RedisContexts.CACHE_COMMENTDO_TTL);
                 //加入存数据库队列
-                redisUtil.rightPushList(RedisContexts.TASK, "visitComment", commentDO.getId());
-                redisUtil.rightPushList(RedisContexts.TASK, "visitComment", parentDO.getId());
+                saveDBQueues.sendVisitCommentQueue(commentDO.getId());
+                saveDBQueues.sendVisitCommentQueue(parentDO.getId());
                 //更新评论的评论列表
                 List<CommentDO> commentList = RedisUtil.findJsonList(RedisContexts.CACHE_COMMENT_LIST_COMMENT, parentId, CommentDO.class);
                 commentList.add(commentDO);
@@ -244,7 +242,7 @@ public class InteractionServiceImpl implements InteractionService {
             commentDO.setDeletedAt(new Date(System.currentTimeMillis()));
             RedisUtil.writeJsonWithTTL(RedisContexts.CACHE_COMMENTDO, commentId, commentDO, RedisContexts.CACHE_COMMENTDO_TTL);
             //加入任务
-            redisUtil.rightPushList(RedisContexts.TASK, "visitComment", commentDO.getId());
+            saveDBQueues.sendVisitCommentQueue(commentDO.getId());
         } finally {
             lock.unlock();
         }

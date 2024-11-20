@@ -5,4 +5,8 @@ import west2project.result.Result;
 
 public interface ChatService {
     Result<?> sendMessage(Long userId, Long groupId, String text, MultipartFile picture);
+
+    Result<?> getSessionList();
+
+    Result<?> newSession(Long userId, Long groupId);
 }

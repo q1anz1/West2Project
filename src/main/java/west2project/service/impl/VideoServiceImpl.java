@@ -15,6 +15,7 @@ import west2project.mapper.VideoMapper;
 import west2project.pojo.DO.video.VideoDO;
 import west2project.pojo.DTO.video.VideoInfoDTO;
 import west2project.pojo.VO.PageBean;
+import west2project.rabbitmq.SaveDBQueues;
 import west2project.result.Result;
 import west2project.service.VideoService;
 import west2project.util.*;
@@ -29,7 +30,7 @@ public class VideoServiceImpl implements VideoService {
     private final VideoMapper videoMapper;
     private final HttpServletRequest httpServletRequest;
     private final RedisUtil redisUtil;
-
+    private final SaveDBQueues saveDBQueues;
     @Override
     public Result publish(MultipartFile video, String title, MultipartFile image, String description) {
         //验证视频合法性并修正
@@ -124,7 +125,7 @@ public class VideoServiceImpl implements VideoService {
             throw new ArgsInvalidException("视频不见了");
         }
         //加入 有人看过队列
-        redisUtil.rightPushList(RedisContexts.TASK,"visitVideo",videoId);
+        saveDBQueues.sendVisitVideoQueue(videoId);
         //增加播放量
         int count=videoDO.getVisitCount();
         videoDO.setVisitCount(count+1);
