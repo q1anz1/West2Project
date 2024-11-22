@@ -8,11 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-import west2project.context.RedisContexts;
 import west2project.result.Result;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+
+import static west2project.context.RedisContexts.REDIS_TIME_UNIT;
 
 @Component
 public class RedisUtil {
@@ -32,6 +34,15 @@ public class RedisUtil {
         redisTemplate.opsForList().rightPush(path + key.toString(), JSONUtil.toJsonStr(value));
     }
 
+    public static void incr(String  path, Object key) {
+        stringRedisTemplate.opsForValue().increment(path+key.toString());
+    }
+
+    public static void incrWithExpire(String  path, Object key, Long time, TimeUnit timeUnit) {
+        incr(path, key);
+        stringRedisTemplate.expire(path+key, time, timeUnit);
+    }
+
     public <R> R leftPopList(String path, Object key, Class<R> clazz) {
         Object object = redisTemplate.opsForList().leftPop(path + key.toString());
         if (object != null) {
@@ -42,7 +53,10 @@ public class RedisUtil {
     }
 
     public static void writeDataWithTTL(String path, Object key, Object value, Long time) {
-        stringRedisTemplate.opsForValue().set(path + key.toString(), value.toString(), time, RedisContexts.REDIS_TIME_UNIT);
+        stringRedisTemplate.opsForValue().set(path + key.toString(), value.toString(), time, REDIS_TIME_UNIT);
+    }
+    public static void writeDataWithTTL(String path, Object key, Object value, Long time , TimeUnit timeUnit) {
+        stringRedisTemplate.opsForValue().set(path + key.toString(), value.toString(), time, timeUnit);
     }
 
     public static void writeData(String path, Object key, Object value) {
@@ -54,7 +68,7 @@ public class RedisUtil {
     }
 
     public static void writeJsonWithTTL(String path, Object key, Object value, Long time) {
-        stringRedisTemplate.opsForValue().set(path + key.toString(), JSONUtil.toJsonStr(value), time, RedisContexts.REDIS_TIME_UNIT);
+        stringRedisTemplate.opsForValue().set(path + key.toString(), JSONUtil.toJsonStr(value), time, REDIS_TIME_UNIT);
     }
 
     public static void writeJson(String path, Object key, Object value) {

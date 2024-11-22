@@ -10,9 +10,14 @@ import static west2project.enums.ResponseCodeEnum.CODE_400;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
+    // TODO 全局异常处理器
 /*    @ExceptionHandler(Exception.class)
     public Result<?> handlerException(Exception e) {
+        return Result.error(999, e.getMessage());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public Result<?> handlerRuntimeException(Exception e) {
         return Result.error(999, e.getMessage());
     }*/
 

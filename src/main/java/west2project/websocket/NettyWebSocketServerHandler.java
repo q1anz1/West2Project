@@ -27,13 +27,13 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
         this.channelUtil = SpringUtil.getBean(ChannelUtil.class);
     }
 
-    //channel连接
+    // channel连接
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
     }
 
-    //channel断开
+    // channel断开
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         // 移除在线用户并关闭

@@ -53,13 +53,17 @@ public class ChannelUtil {
         return true;
     }
 
-    // 发送群消息
-    public static boolean sendGroupMessage(Result<?> result, Long groupId) {
-        if (groupId == null) return false;
+    // 发送群消息,返回发送成功的群友的id
+    public static List<Long> sendGroupMessage(Result<?> result, Long groupId) {
+        if (groupId == null) return null;
         ChannelGroup channelGroup = GROUP_CONTEXT_MAP.get(groupId);
-        if (channelGroup == null) throw new RuntimeException("群号："+groupId+"，在GROUP_CONTEXT_MAP中为空，于发送消息到群时");
-        channelGroup.forEach(channel -> channel.writeAndFlush(new TextWebSocketFrame(result.asJsonString())));
-        return true;
+        if (channelGroup == null) return null;// 无人在线
+        List<Long> successUserIdList = new ArrayList<>();
+        channelGroup.forEach(channel -> {
+            channel.writeAndFlush(new TextWebSocketFrame(result.asJsonString()));
+            successUserIdList.add((Long)channel.attr(AttributeKey.valueOf(channel.id().toString())).get());
+        });
+        return successUserIdList;
     }
 
     // 在通道升级协议后初始化通道
@@ -139,8 +143,8 @@ public class ChannelUtil {
         return sessionVOList;
     }
 
-    // 返回该用户所有的彭油，爱情不是冰红茶
-    private List<UserInfoVO> getFriendUserInfoVOList(Long userId) {
+    // 返回该用户所有的彭油
+    public List<UserInfoVO> getFriendUserInfoVOList(Long userId) {
         List<UserInfoVO> friendUserInfoList = new ArrayList<>();
         for (Long friendId: friendMapper.selectFriendIdListByUserId(userId)) {
             Result<?> result = RedisUtil.findJsonWithCache(CACHE_USER_INFO, friendId, UserInfoVO.class, userMapper::findUserInfoVOByUserId, CACHE_USER_INFO_TTL);
@@ -150,10 +154,11 @@ public class ChannelUtil {
     }
 
     // 返回该用户所有群聊
-    private List<GroupVO> getGroupVOList(Long userId) {
+    public List<GroupVO> getGroupVOList(Long userId) {
         List<GroupVO> groupVOList  = new ArrayList<>();
-        for (GroupDO DO: groupMapper.selectGroupDOListByUserId(userId)) {
-            groupVOList.add(new GroupVO(DO.getId(), DO.getGroupName(), DO.getLeaderId(), DO.getText() ,DO.getAvatarUrl() ,DO.getCount()));
+        List<GroupDO> groupDOList = groupMapper.selectGroupDOListByUserId(userId);
+        for (GroupDO aDO: groupDOList) {
+            groupVOList.add(new GroupVO(aDO.getId(), aDO.getGroupName(), aDO.getLeaderId(), aDO.getText() ,aDO.getAvatarUrl() ,aDO.getCount()));
         }
         return groupVOList;
     }

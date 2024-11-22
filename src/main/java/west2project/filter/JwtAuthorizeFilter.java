@@ -1,7 +1,5 @@
 package west2project.filter;
 
-import io.jsonwebtoken.Jwt;
-import jakarta.annotation.Resource;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

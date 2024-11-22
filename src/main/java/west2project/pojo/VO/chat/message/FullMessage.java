@@ -21,6 +21,7 @@ public class FullMessage<T> implements Serializable {
     private Integer messageType;
     private String messageTypeInfo;
     private Long senderId;
+    private Long groupId;
     private T msg;
 
     public static <T> FullMessage<T> init(Integer msgType, Long senderId, T msg) {
@@ -29,6 +30,16 @@ public class FullMessage<T> implements Serializable {
         fullMessage.setMessageTypeInfo(MESSAGE_TYPE_INFO_MAP.get(msgType));
         fullMessage.setSenderId(senderId);
         fullMessage.setMsg(msg);
+        return fullMessage;
+    }
+
+    public static <T> FullMessage<T> init(Integer msgType, Long senderId, Long groupId, T msg) {
+        FullMessage<T> fullMessage = new FullMessage<>();
+        fullMessage.setMessageType(msgType);
+        fullMessage.setMessageTypeInfo(MESSAGE_TYPE_INFO_MAP.get(msgType));
+        fullMessage.setSenderId(senderId);
+        fullMessage.setMsg(msg);
+        fullMessage.setGroupId(groupId);
         return fullMessage;
     }
 }

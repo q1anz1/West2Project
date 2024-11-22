@@ -9,6 +9,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 public class ChatMsg implements Serializable {
+    private String UUID;
     private String text;
     private String pictureUrl;
     private Date createdAt;

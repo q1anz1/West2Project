@@ -33,4 +33,32 @@ public class ChatController {
                                 @RequestParam(value = "group_id", required = false)Long groupId) {
         return chatService.newSession(userId, groupId);
     }
+
+    @GetMapping("/messsage/get")
+    public Result<?> getMessage(@RequestParam(value = "user_id", required = false)Long userId,
+                                @RequestParam(value = "group_id", required = false)Long groupId) {
+        return chatService.getMessage(userId, groupId);
+    }
+
+    @PostMapping("/group/new")
+    public Result<?> newGroup(@RequestParam("group_name")String name,
+                              @RequestParam("text")String text,
+                              @RequestParam("avatar")MultipartFile multipartFile) {
+        return chatService.newGroup(name,text,multipartFile);
+    }
+
+    @GetMapping("/friends/get")
+    public Result<?> getFriend() {
+        return chatService.getFriend();
+    }
+
+    @GetMapping("/groups/get")
+    public Result<?> getGroup() {
+        return chatService.getGroup();
+    }
+
+    @PostMapping("/group/join")
+    private Result<?> joinGroup(@RequestParam("group_id")Long groupId) {
+        return chatService.joinGroup(groupId);
+    }
 }

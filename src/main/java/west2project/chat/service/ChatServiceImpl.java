@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import west2project.exception.ArgsInvalidException;
 import west2project.exception.UserException;
@@ -11,6 +12,7 @@ import west2project.mapper.*;
 import west2project.pojo.DO.chat.GroupDO;
 import west2project.pojo.DO.chat.MessageDO;
 import west2project.pojo.DO.chat.SessionDO;
+import west2project.pojo.DTO.chat.MQSaveChatMsgDTO;
 import west2project.pojo.VO.chat.SessionVO;
 import west2project.pojo.VO.chat.message.ChatMsg;
 import west2project.pojo.VO.chat.message.FullMessage;
@@ -23,8 +25,10 @@ import west2project.util.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import static west2project.context.CommonContexts.CHAT_IMAGE_BOX;
+import static west2project.context.CommonContexts.GROUP_AVATAR_BOX;
 import static west2project.context.RedisContexts.*;
 import static west2project.pojo.VO.chat.message.FullMessage.CHAT_MSG;
 
@@ -38,6 +42,7 @@ public class ChatServiceImpl implements ChatService {
     private final SessionMapper sessionMapper;
     private final UserMapper userMapper;
     private final GroupUserMapper groupUserMapper;
+    private final MessageMapper messageMapper;
     private final GroupMapper groupMapper;
     private final SaveChatMsgQueue saveChatMsgQueue;
     private final ChatMessageQueue chatMessageQueue;
@@ -83,17 +88,19 @@ public class ChatServiceImpl implements ChatService {
         }
         // 打包为用于推送的消息
         Date createdAt = new Date(System.currentTimeMillis());
-        FullMessage<ChatMsg> fullMessage = FullMessage.init(CHAT_MSG, userId, new ChatMsg(text, pictureUrl, createdAt));
+        String uuid = UUID.randomUUID().toString();
+        FullMessage<ChatMsg> fullMessage = FullMessage.init(CHAT_MSG, userId, groupId, new ChatMsg(uuid, text, pictureUrl, createdAt));
         // 推送消息
         if (toUserId == null) {
-            // 发送消息
+            // 群发送消息
             chatMessageQueue.sendChatMessageQueue(fullMessage, groupId, false);
         } else {
-            // 发送消息
+            // 好友发送消息
             chatMessageQueue.sendChatMessageQueue(fullMessage, toUserId, true);
         }
         // 将消息存入数据库(mq)
-        saveChatMsgQueue.sendSaveChatMsgQueue(new MessageDO(userId, text, pictureUrl, toUserId, groupId, createdAt));
+        MQSaveChatMsgDTO mqSaveChatMsgDTO = new MQSaveChatMsgDTO(new MessageDO(userId, text, pictureUrl, toUserId, groupId, createdAt), uuid);
+        saveChatMsgQueue.sendSaveChatMsgQueue(mqSaveChatMsgDTO);
         // 更新session于redis和db
         if (text != null && text.length()>10) text = text.substring(0, 10);
         sessionDO.setLastMessage(text);
@@ -157,16 +164,70 @@ public class ChatServiceImpl implements ChatService {
         return Result.success(sessionVO);
     }
 
+    @Override
+    public Result<?> getMessage(Long toUserId, Long groupId) {
+        if ((toUserId == null && groupId == null) || (toUserId != null && groupId != null)) throw new ArgsInvalidException("操作错误");
+        Long userId = JwtUtil.getUserId(httpServletRequest);
+        if (toUserId == null) {
+            List<MessageDO> groupMessageList = messageMapper.getGroupMessageLast30Days(groupId);
+            return Result.success(groupMessageList);
+        } else {
+            List<MessageDO> friendAndOwnMessageList = messageMapper.getFriendAndOwnMessageLast30Days(userId, toUserId);
+            return Result.success(friendAndOwnMessageList);
+        }
+    }
+
+    @Override
+    public Result<?> newGroup(String name, String text, MultipartFile multipartFile) {
+        String tika = TikaUtil.isImageValid(multipartFile);
+        if (!tika.equals("true")) return Result.error(tika);
+        if (name.length()>15) throw new ArgsInvalidException("名字过长");
+        if (text.length()>50) throw new ArgsInvalidException("简介过长");
+        // 保存头像到本地
+        String avatar_url = SaveUtil.saveFile(multipartFile, GROUP_AVATAR_BOX);
+        Long userId = JwtUtil.getUserId(httpServletRequest);
+        // 插入数据库
+        GroupDO groupDO = new GroupDO(name, userId, text, avatar_url);
+        groupMapper.insertGroup(groupDO);
+        // 将自己加入组
+        groupUserMapper.insertGroupUser(userId, groupDO.getId(), 2);
+        return Result.success();
+    }
+
+    @Override
+    public Result<?> getFriend() {
+        Long userId = JwtUtil.getUserId(httpServletRequest);
+        return Result.success(channelUtil.getFriendUserInfoVOList(userId));
+    }
+
+    @Override
+    public Result<?> getGroup() {
+        Long userId = JwtUtil.getUserId(httpServletRequest);
+        return Result.success(channelUtil.getGroupVOList(userId));
+    }
+
+    @Override
+    @Transactional
+    public Result<?> joinGroup(Long groupId) {
+        if (groupMapper.selectGroupDOByGroupId(groupId) == null) throw new ArgsInvalidException("群不存在");
+        Long userId = JwtUtil.getUserId(httpServletRequest);
+        groupUserMapper.insertGroupUser(userId, groupId, 0);
+        groupMapper.updateCount(groupId);
+        return Result.success();
+    }
+
     private boolean isFriend(Long userId, Long toUserId) {
         if (Objects.equals(userId, toUserId)) return true;
         Result<?> result = RedisUtil.findJsonListWithCache(CACHE_FRIEND_LIST, userId, Long.class, friendMapper::selectFriendIdListByUserId, CACHE_FRIEND_LIST_TTL);
         List<Long> friendIdList = (List<Long>) result.getData();
+        if (friendIdList.isEmpty()) return false;
         return friendIdList.contains(toUserId);
     }
 
     private boolean isInGroup(Long userId, Long groupId) {
         Result<?> result = RedisUtil.findJsonListWithCache(CACHE_GROUP_LIST, userId, Long.class, groupUserMapper::selectGroupIdListByUserId, CACHE_GROUPDO_TTL);
         List<Long> groupIdList = (List<Long>) result.getData();
+        if (groupIdList.isEmpty()) return false;
         return groupIdList.contains(groupId);
     }
 }

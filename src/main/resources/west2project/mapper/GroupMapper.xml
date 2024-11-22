@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="west2project.mapper.GroupMapper">
+    <insert id="insertGroup" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO west2_online_project.`group`(group_name, leader_id, text, avatar_url)
+        VALUES(#{groupName},#{leaderId},#{text},#{avatarUrl})
+    </insert>
+</mapper>

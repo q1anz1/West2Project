@@ -50,7 +50,7 @@ public class SaveUtil {
     }
 
     public static String saveFile(MultipartFile file, String path) {
-        return saveFileWithName(file,path,changeFileName(file));
+        return saveFileWithName(file, path, changeFileName(file));
     }
 
     public static String saveFileWithName(MultipartFile file, String path, String fileName) {

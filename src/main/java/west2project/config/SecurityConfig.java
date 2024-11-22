@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import west2project.filter.FrequencyFilter;
 import west2project.filter.JwtAuthorizeFilter;
 import west2project.mapper.UserMapper;
 import west2project.pojo.VO.user.LoginVO;
@@ -31,6 +32,8 @@ import java.util.Map;
 public class SecurityConfig {
     @Resource
     JwtAuthorizeFilter jwtAuthorizeFilter;
+    @Resource
+    FrequencyFilter frequencyFilter;
     @Resource
     UserMapper userMapper;
 
@@ -65,6 +68,7 @@ public class SecurityConfig {
                 .sessionManagement(conf -> conf
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthorizeFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(frequencyFilter, JwtAuthorizeFilter.class)
                 .build();
     }
 

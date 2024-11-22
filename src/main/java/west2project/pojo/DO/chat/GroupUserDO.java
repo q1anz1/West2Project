@@ -6,5 +6,6 @@ import lombok.Data;
 public class GroupUserDO {
     private Long id;
     private Long userId;
-    private int role;
+    private Long groupId;
+    private Integer role;
 }

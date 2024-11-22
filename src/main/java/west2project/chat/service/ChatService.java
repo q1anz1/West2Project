@@ -9,4 +9,14 @@ public interface ChatService {
     Result<?> getSessionList();
 
     Result<?> newSession(Long userId, Long groupId);
+
+    Result<?> getMessage(Long userId, Long groupId);
+
+    Result<?> newGroup(String name, String text, MultipartFile multipartFile);
+
+    Result<?> getFriend();
+
+    Result<?> getGroup();
+
+    Result<?> joinGroup(Long groupId);
 }
