@@ -88,7 +88,7 @@ public class RedisUtil {
             //压根彻底完全不存在
             //将空写入redis
             writeJsonWithTTL(path, key.toString(), "", minute);
-            return Result.error("不存在");
+            throw new RuntimeException("资源不存在");
         }
         //数据库中存在，缓存中不存在
         writeJsonWithTTL(path, key.toString(), JSONUtil.toJsonStr(r), minute);
@@ -118,7 +118,7 @@ public class RedisUtil {
             //压根彻底完全不存在
             //将空写入redis
             writeJsonWithTTL(path, key.toString(), "", minute);
-            return Result.error("不存在");
+            throw new RuntimeException("资源不存在");
         }
         //数据库中存在，缓存中不存在
         writeJsonWithTTL(path, key.toString(), JSONUtil.toJsonStr(list), minute);

@@ -29,7 +29,6 @@ import java.util.List;
 public class VideoServiceImpl implements VideoService {
     private final VideoMapper videoMapper;
     private final HttpServletRequest httpServletRequest;
-    private final RedisUtil redisUtil;
     private final SaveDBQueues saveDBQueues;
     @Override
     public Result publish(MultipartFile video, String title, MultipartFile image, String description) {
@@ -60,17 +59,17 @@ public class VideoServiceImpl implements VideoService {
         //存入数据库
         videoMapper.saveVideo(userId, videoUrl, imageUrl, title, description, DateTime.now(), DateTime.now());
         //将上传信息存入redis
-        Result result = RedisUtil.findJsonWithCache(RedisContexts.CACHE_PUBLISH_VIDEO_LIST, userId, List.class, videoMapper::findVideoPublishList,
+        Result result = RedisUtil.findJsonWithCache(RedisContexts.CACHE_PUBLISH_VIDEO_LIST, userId, List.class, videoMapper::findVideoPublishListByUserId,
                 RedisContexts.CACHE_PUBLISH_VIDEO_LIST_TTL);
         List<Long> list = (List<Long>) result.getData();
-        list.add(videoMapper.findVideoId(videoUrl));
+        list.add(videoMapper.findVideoIdByVideoUrl(videoUrl));
         RedisUtil.writeJsonWithTTL(RedisContexts.CACHE_PUBLISH_VIDEO_LIST, userId.toString(), list, RedisContexts.CACHE_PUBLISH_VIDEO_LIST_TTL);
         return Result.success();
     }
 
     @Override
     public Result videoPublishList(Long userId, Integer pageNum, Integer pageSize) {
-        Result result = RedisUtil.findJsonWithCache(RedisContexts.CACHE_PUBLISH_VIDEO_LIST, userId, List.class, videoMapper::findVideoPublishList,
+        Result result = RedisUtil.findJsonWithCache(RedisContexts.CACHE_PUBLISH_VIDEO_LIST, userId, List.class, videoMapper::findVideoPublishListByUserId,
                 RedisContexts.CACHE_PUBLISH_VIDEO_LIST_TTL);
         List<Long> list = (List<Long>) result.getData();
         if (list.isEmpty()) {
@@ -97,7 +96,7 @@ public class VideoServiceImpl implements VideoService {
         }
         //将用户名转化为id
         Result result = RedisUtil.findJsonWithCache(RedisContexts.CACHE_USERNAME_TO_USERID, username, Long.class,
-                videoMapper::findUserId, RedisContexts.CACHE_USERNAME_TO_USERID_TTL);
+                videoMapper::findUserIdByUsername, RedisContexts.CACHE_USERNAME_TO_USERID_TTL);
         Long userId = (Long) result.getData();
         //在数据库进行查询
         PageHelper.startPage(pageNum, pageSize);
@@ -115,13 +114,13 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public Result videoFeed(Long videoId) {
-        Result result = RedisUtil.findJsonWithCache(RedisContexts.CACHE_VIDEODO,videoId, VideoDO.class,videoMapper::findVideoDO,
+        Result result = RedisUtil.findJsonWithCache(RedisContexts.CACHE_VIDEODO,videoId, VideoDO.class,videoMapper::findVideoDOByVideoId,
                 RedisContexts.CACHE_VIDEODO_TTL);
         VideoDO videoDO = (VideoDO) result.getData();
         if(videoDO==null){
             throw new ArgsInvalidException("视频不存在");
         }
-        if(videoDO.getDeletedAt() != null){
+        if(videoDO.getDeletedAt() != null || !videoDO.getReview()){
             throw new ArgsInvalidException("视频不见了");
         }
         //加入 有人看过队列

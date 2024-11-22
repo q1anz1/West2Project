@@ -1,5 +1,6 @@
 package west2project.pojo.DO.chat;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -7,6 +8,7 @@ import java.util.Date;
 
 @Data
 @NoArgsConstructor// 一定要加，不然mybatis搞死你
+@AllArgsConstructor
 public class SessionDO {
     private Long id;
     private Long userId1;

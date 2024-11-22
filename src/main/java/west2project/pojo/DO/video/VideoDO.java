@@ -18,4 +18,5 @@ public class VideoDO {
     private Date createdAt;
     private Date updatedAt;
     private Date deletedAt;
+    private Boolean review;
 }

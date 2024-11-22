@@ -166,6 +166,12 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
             <version> 3.3.2</version>
         </dependency>
+<!--        敏感词检查-->
+        <dependency>
+            <groupId>com.github.houbb</groupId>
+            <artifactId>sensitive-word</artifactId>
+            <version>0.21.0</version>
+        </dependency>
     </dependencies>
 
     <build>

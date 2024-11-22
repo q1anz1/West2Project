@@ -19,7 +19,7 @@ public class RedisContexts {
     public static final Long CACHE_FRIEND_LIST_TTL = 60L;
     public static final Long CACHE_GROUP_LIST_TTL = 60L;
     public static final Long CACHE_GROUPDO_TTL = 60L;
-    public static final Long REDIS_UNREAD_MESSAGE_TTL = 43200L;
+    public static final Long CACHE_SESSIONDO_TTL = 720L;
     public static final String CACHE = "cache:";
     public static final String CACHE_COMMENT_LIST_VIDEO = "cache:comment:list:video:";
     public static final String CACHE_COMMENT_LIST_COMMENT = "cache:comment:list:comment:";
@@ -37,6 +37,7 @@ public class RedisContexts {
     public static final String CACHE_FRIEND_LIST = "cache:chat:friend_list:";
     public static final String CACHE_GROUP_LIST = "cache:chat:group_list:";
     public static final String CACHE_GROUPDO = "cache:chat:group:do:";
+    public static final String CACHE_SESSIONDO = "cache:chat:session:do:";
     public static final String REDIS_UNREAD_MESSAGE = "chat:unread:message:";
     public static final String TASK = "task:";
 }

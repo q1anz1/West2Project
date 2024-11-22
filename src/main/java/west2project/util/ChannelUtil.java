@@ -1,5 +1,6 @@
 package west2project.util;
 
+import cn.hutool.json.JSONUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -8,6 +9,7 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import west2project.mapper.*;
 import west2project.pojo.DO.chat.GroupDO;
@@ -39,9 +41,11 @@ public class ChannelUtil {
     private final GroupMapper groupMapper;
     private final UserMapper userMapper;
     private final FriendMapper friendMapper;
+    private final RedisTemplate<String,Object> redisTemplate;
+
 
     // 发送消息
-    public static boolean sendMsg(Result<?> result, Long receiverId) {
+    public static boolean sendPersonalMsg(Result<?> result, Long receiverId) {
         if (receiverId == null) return false;
         Channel channel = USER_CONTEXT_MAP.get(receiverId);
         if (channel == null) return false;
@@ -49,14 +53,23 @@ public class ChannelUtil {
         return true;
     }
 
+    // 发送群消息
+    public static boolean sendGroupMessage(Result<?> result, Long groupId) {
+        if (groupId == null) return false;
+        ChannelGroup channelGroup = GROUP_CONTEXT_MAP.get(groupId);
+        if (channelGroup == null) throw new RuntimeException("群号："+groupId+"，在GROUP_CONTEXT_MAP中为空，于发送消息到群时");
+        channelGroup.forEach(channel -> channel.writeAndFlush(new TextWebSocketFrame(result.asJsonString())));
+        return true;
+    }
+
     // 在通道升级协议后初始化通道
     public void initChannel(Long userId, Channel channel) {
         addUserIdToChannelAttribute(userId, channel);
         onlineChannel(userId, channel);
-        // 查询用户的联系人，群和会话
+        // 查询用户的联系人，群和会话，未读消息
         WsInitMsg wsInitMsg = getWsInitVO(userId);
         // 返回前端
-        sendMsg(Result.success(FullMessage.init(INIT_WS_MSG,SYSTEM_ID,wsInitMsg)),userId);
+        sendPersonalMsg(Result.success(FullMessage.init(INIT_WS_MSG,SYSTEM_ID,wsInitMsg)),userId);
     }
 
     // 移除在线用户并关闭
@@ -76,7 +89,26 @@ public class ChannelUtil {
         wsInitMsg.setFriendUserInfoVOList(getFriendUserInfoVOList(userId));
         // 群聊列表
         wsInitMsg.setGroupVOList(getGroupVOList(userId));
+        // 查询未读消息列表
+        wsInitMsg.setUnreadFullMessageList(getUnreadMessage(userId));
         return wsInitMsg;
+    }
+
+    // 查询离线未读消息
+    private List<FullMessage<?>> getUnreadMessage(Long userId) {
+        String queryName = REDIS_UNREAD_MESSAGE+userId.toString();
+        List<Object> objectList = redisTemplate.opsForList().range(queryName,0, -1);
+        if (objectList != null) {
+            List<FullMessage<?>> rList = new ArrayList<>();
+            for (Object o : objectList) {
+                rList.add(JSONUtil.toBean(o.toString(), FullMessage.class));
+            }
+            // 读完后删除列表
+            redisTemplate.delete(queryName);
+            return rList;
+        } else {
+            return null;
+        }
     }
 
     // 返回最后一条消息在最近30天内的所有群和好友的session

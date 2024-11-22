@@ -6,8 +6,9 @@
         select id, user_id, cover_url, title, visit_count, created_at
         from west2_online_project.video
         <where>
+            review = true
             <if test="keywords != null">
-                title like CONCAT(#{keywords}, '%') or `description` like CONCAT(#{keywords}, '%') or id=#{keywords}
+                and title like CONCAT(#{keywords}, '%') or `description` like CONCAT(#{keywords}, '%') or id=#{keywords}
             </if>
             <if test="userId != null">
                 and  user_id= #{userId}
@@ -19,5 +20,6 @@
                 and created_at &lt; #{toDate}
             </if>
         </where>
+
     </select>
 </mapper>

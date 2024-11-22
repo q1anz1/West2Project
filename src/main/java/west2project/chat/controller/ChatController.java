@@ -17,11 +17,10 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping("/message/send")
-    public Result<?> sendMessage(@RequestParam(value = "user_id", required = false)Long userId,
-                                 @RequestParam(value = "group_id", required = false)Long groupId,
+    public Result<?> sendMessage(@RequestParam("session_id")Long sessionId,
                                  @RequestParam(value = "text", required = false)String text,
-                                 @RequestParam(value = "picture", required = false)MultipartFile picture) {
-        return chatService.sendMessage(userId, groupId, text, picture);
+                                 @RequestParam(value = "picture", required = false)MultipartFile picture) throws Exception {
+        return chatService.sendMessage(sessionId, text, picture);
     }
 
     @GetMapping("/session/list/get")

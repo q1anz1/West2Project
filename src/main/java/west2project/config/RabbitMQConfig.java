@@ -1,8 +1,6 @@
 package west2project.config;
 
-import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -49,5 +47,15 @@ public class RabbitMQConfig {
     @Bean
     public Queue getDislikeVideoQueue() {
         return new Queue("dislike.video.queue", true, false, false);
+    }
+
+    @Bean
+    public Queue getChatMessageQueue() {
+        return new Queue("chat.message.queue", true, false, false);
+    }
+
+    @Bean
+    public Queue getUpdateSession() {
+        return new Queue("session.update.queue", true, false, false);
     }
 }

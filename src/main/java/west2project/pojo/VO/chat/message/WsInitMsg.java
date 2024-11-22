@@ -13,4 +13,5 @@ public class WsInitMsg implements Serializable {
     private List<SessionVO> sessionVOList;
     private List<UserInfoVO> friendUserInfoVOList;
     private List<GroupVO> groupVOList;
+    private List<FullMessage<?>> unreadFullMessageList;
 }
