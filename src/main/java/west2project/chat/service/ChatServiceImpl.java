@@ -44,9 +44,10 @@ public class ChatServiceImpl implements ChatService {
     private final GroupUserMapper groupUserMapper;
     private final MessageMapper messageMapper;
     private final GroupMapper groupMapper;
-    private final SaveChatMsgQueue saveChatMsgQueue;
+/*    private final SaveChatMsgQueue saveChatMsgQueue;
     private final ChatMessageQueue chatMessageQueue;
-    private final UpdateSessionQueue updateSessionQueue;
+    private final UpdateSessionQueue updateSessionQueue;*/
+/*
     @Override
     public Result<?> sendMessage(Long sessionId, String text, MultipartFile picture) {
         // 拒绝以下请求
@@ -108,6 +109,7 @@ public class ChatServiceImpl implements ChatService {
         updateSessionQueue.sendUpdateSessionQueue(sessionDO);
         return Result.success();
     }
+*/
 
     @Override
     public Result<?> getSessionList() {
@@ -216,18 +218,4 @@ public class ChatServiceImpl implements ChatService {
         return Result.success();
     }
 
-    private boolean isFriend(Long userId, Long toUserId) {
-        if (Objects.equals(userId, toUserId)) return true;
-        Result<?> result = RedisUtil.findJsonListWithCache(CACHE_FRIEND_LIST, userId, Long.class, friendMapper::selectFriendIdListByUserId, CACHE_FRIEND_LIST_TTL);
-        List<Long> friendIdList = (List<Long>) result.getData();
-        if (friendIdList.isEmpty()) return false;
-        return friendIdList.contains(toUserId);
-    }
-
-    private boolean isInGroup(Long userId, Long groupId) {
-        Result<?> result = RedisUtil.findJsonListWithCache(CACHE_GROUP_LIST, userId, Long.class, groupUserMapper::selectGroupIdListByUserId, CACHE_GROUPDO_TTL);
-        List<Long> groupIdList = (List<Long>) result.getData();
-        if (groupIdList.isEmpty()) return false;
-        return groupIdList.contains(groupId);
-    }
 }

@@ -16,12 +16,12 @@ import west2project.result.Result;
 public class ChatController {
     private final ChatService chatService;
 
-    @PostMapping("/message/send")
+/*    @PostMapping("/message/send")
     public Result<?> sendMessage(@RequestParam("session_id")Long sessionId,
                                  @RequestParam(value = "text", required = false)String text,
                                  @RequestParam(value = "picture", required = false)MultipartFile picture) throws Exception {
         return chatService.sendMessage(sessionId, text, picture);
-    }
+    }*/
 
     @GetMapping("/session/list/get")
     public Result<?> getSessionList() {

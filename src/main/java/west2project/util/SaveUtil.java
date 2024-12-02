@@ -1,7 +1,10 @@
 package west2project.util;
 
+import ch.qos.logback.core.testUtil.MockInitialContext;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import west2project.exception.ArgsInvalidException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -67,6 +70,7 @@ public class SaveUtil {
         String newFileName;
         String uuid = System.currentTimeMillis() + String.valueOf(UUID.randomUUID());
         if (originalFileName != null) {
+            if (!originalFileName.contains(".")) throw new ArgsInvalidException("multipart文件无后缀");
             newFileName = uuid + originalFileName.substring(originalFileName.lastIndexOf("."));
         } else {
             newFileName = uuid;
@@ -90,5 +94,10 @@ public class SaveUtil {
         }
     }
 
-
+    public static MultipartFile base64ToImage(String text) {
+        String[] parts = text.split(",");
+        String contentType = parts[0].split(";")[0].split(":")[1];
+        byte[] bytes = Base64.getDecoder().decode(parts[1]);
+        return new MockMultipartFile("pic.png", "pic.png", contentType, bytes);
+    }
 }

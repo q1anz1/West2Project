@@ -43,6 +43,8 @@ public class ChatServerUtil {
         for (Long friendId : removeSet) {
             remobeList.add(new FriendDO(userId,friendId));
         }
+        //刷新redis
+        RedisUtil.writeJsonWithTTL(CACHE_FRIEND_LIST,userId,followSet,CACHE_FRIEND_LIST_TTL);
         //对friend表进行更新
         if (!addList.isEmpty()) {
             friendMapper.batchInsert(addList);
@@ -50,8 +52,5 @@ public class ChatServerUtil {
         if (!remobeList.isEmpty()) {
             friendMapper.batchDelete(remobeList);
         }
-        //刷新redis
-        RedisUtil.writeJsonWithTTL(CACHE_FRIEND_LIST,userId,followSet,CACHE_FRIEND_LIST_TTL);
     }
-
 }

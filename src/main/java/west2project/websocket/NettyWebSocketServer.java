@@ -25,9 +25,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class NettyWebSocketServer {
-    public static final int WEB_SOCKET_PORT = 5050;
+    private static final int WEB_SOCKET_PORT = 5050;
+    private static final NettyWebSocketServerHandler NETTY_WEB_SOCKET_SERVER_HANDLER = new NettyWebSocketServerHandler();
 
-    public static final NettyWebSocketServerHandler NETTY_WEB_SOCKET_SERVER_HANDLER = new NettyWebSocketServerHandler();
     private EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private EventLoopGroup workerGroup = new NioEventLoopGroup(NettyRuntime.availableProcessors());
 
@@ -60,12 +60,11 @@ public class NettyWebSocketServer {
                         pipeline.addLast(new IdleStateHandler(300, 0, 0));
                         pipeline.addLast(new HttpServerCodec());
                         pipeline.addLast(new ChunkedWriteHandler());
-                        pipeline.addLast(new HttpObjectAggregator(65536));
+                        pipeline.addLast(new HttpObjectAggregator(655360));
                         pipeline.addLast(new WebSocketServerProtocolHandler(
-                                "/websocket",null,true,65536,true,
+                                "/websocket",null,true,655360,true,
                         true,10000L));
                         pipeline.addLast(NETTY_WEB_SOCKET_SERVER_HANDLER);
-
                     }
                 });
         serverBootstrap.bind(WEB_SOCKET_PORT).sync();

@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
+import west2project.result.Result;
 import west2project.util.ChannelUtil;
 import west2project.util.JwtUtil;
 
@@ -17,14 +18,18 @@ import java.util.Objects;
 
 @Slf4j
 @ChannelHandler.Sharable
-
 public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
     private ChannelUtil channelUtil;
+    private ChannelRead channelRead;
+
+    public NettyWebSocketServerHandler() {
+    }
 
     // 在管道连接时，注入bean，由于不是spring创建的，自动注入用不了，只能手动注
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         this.channelUtil = SpringUtil.getBean(ChannelUtil.class);
+        this.channelRead = SpringUtil.getBean(ChannelRead.class);
     }
 
     // channel连接
@@ -41,10 +46,8 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) throws Exception {
-/*        Channel channel = ctx.channel();
-        Attribute<Long> attribute = channel.attr(AttributeKey.valueOf(channel.id().toString()));
-        Long userId = attribute.get();*/
+    protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) {
+        channelRead.handle(ctx,textWebSocketFrame);
     }
 
     // 心跳和验证
@@ -74,9 +77,9 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
 
     // 处理异常
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.warn("异常发生: ", cause);
-        ctx.channel().close();
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
+        log.warn("webSocket异常发生: ", cause);
+        ctx.writeAndFlush(new TextWebSocketFrame(Result.error(400, cause.getMessage()).asJsonString()));
     }
 
     // 从url中获得token
