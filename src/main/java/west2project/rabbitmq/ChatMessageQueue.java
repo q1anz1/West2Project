@@ -23,7 +23,7 @@ import static west2project.context.RedisContexts.*;
 @Component
 @RequiredArgsConstructor
 public class ChatMessageQueue {
-    private final RabbitTemplate rabbitTemplate;
+  /*  private final RabbitTemplate rabbitTemplate;
     private final GroupUserMapper groupUserMapper;
     private final RedisUtil redisUtil;
     public void sendChatMessageQueue(FullMessage<ChatMsg> fullMessage, Long targetId, Boolean toUser) {
@@ -64,5 +64,5 @@ public class ChatMessageQueue {
                 redisUtil.rightPushList(REDIS_UNREAD_MESSAGE, userid, fullMessage);
             });
         }
-    }
+    }*/
 }

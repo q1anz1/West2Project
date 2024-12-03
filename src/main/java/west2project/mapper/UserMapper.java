@@ -33,5 +33,9 @@ public interface UserMapper {
     @Update("update west2_online_project.user set avatar_url=#{path},updated_at=#{updatedAt} where id=#{id}")
     void saveAvatar(Long id, String path, DateTime updatedAt);
 
+    @Update("UPDATE west2_online_project.user SET updated_at=#{date} WHERE id=#{userID}")
+    void updateLastOnlineTime(Long userId, Date date);
 
+    @Select("SELECT updated_at FROM west2_online_project.user WHERE id=#{userId}")
+    Date selectUpdatedAtByUserId(Long userId);
 }

@@ -61,4 +61,9 @@ public class ChatController {
     private Result<?> joinGroup(@RequestParam("group_id")Long groupId) {
         return chatService.joinGroup(groupId);
     }
+
+    @GetMapping("/message/unread")
+    public Result<?> unreadMessage() {
+        return chatService.unreadMessage();
+    }
 }

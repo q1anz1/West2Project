@@ -19,22 +19,13 @@ import west2project.pojo.DO.chat.SessionDO;
 import west2project.pojo.DTO.chat.MQSaveChatMsgDTO;
 import west2project.pojo.VO.chat.message.ChatMsg;
 import west2project.pojo.VO.chat.message.FullMessage;
-import west2project.rabbitmq.ChatMessageQueue;
 import west2project.rabbitmq.SaveChatMsgQueue;
 import west2project.rabbitmq.UpdateSessionQueue;
 import west2project.result.Result;
-import west2project.util.ChatUtil;
-import west2project.util.RedisUtil;
-import west2project.util.SaveUtil;
-import west2project.util.TikaUtil;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import west2project.util.*;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import static west2project.context.CommonContexts.CHAT_IMAGE_BOX;
 import static west2project.context.RedisContexts.*;
 import static west2project.pojo.VO.chat.message.FullMessage.CHAT_MSG;
@@ -44,10 +35,10 @@ import static west2project.pojo.VO.chat.message.FullMessage.CHAT_MSG;
 @RequiredArgsConstructor
 public class ChannelRead {
     private final SaveChatMsgQueue saveChatMsgQueue;
-    private final ChatMessageQueue chatMessageQueue;
     private final UpdateSessionQueue updateSessionQueue;
     private final SessionMapper sessionMapper;
     private final FriendMapper friendMapper;
+    private final RedisUtil redisUtil;
     private final GroupUserMapper groupUserMapper;
 
     public void handle(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) {
@@ -128,8 +119,7 @@ public class ChannelRead {
             throw new ArgsInvalidException("参数错误");
         }
         // 得到当前用户id
-        Long userId = senderId;
-        assert userId != null;
+        assert senderId != null;
         // 从session获得对话信息
         SessionDO sessionDO = (SessionDO) RedisUtil.findJsonWithCache(CACHE_SESSIONDO, sessionId, SessionDO.class, sessionMapper::selectSessionDOBySessionId, CACHE_SESSIONDO_TTL).getData();
         if (sessionDO == null) throw new RuntimeException("会话不存在");
@@ -138,14 +128,14 @@ public class ChannelRead {
         Long toUserId = null;
         if (sessionDO.getGroupId() == null) {
             // 是好友间的消息
-            if (!(isFriend(userId, sessionDO.getUserId1()) || isFriend(userId, sessionDO.getUserId2()))) {
+            if (!(isFriend(senderId, sessionDO.getUserId1()) || isFriend(senderId, sessionDO.getUserId2()))) {
                 throw new ArgsInvalidException("不是好友");
             }
-            toUserId = sessionDO.getUserId1().equals(userId) ? sessionDO.getUserId2() : sessionDO.getUserId1();
+            toUserId = sessionDO.getUserId1().equals(senderId) ? sessionDO.getUserId2() : sessionDO.getUserId1();
         } else {
             // 是群消息
             groupId = sessionDO.getGroupId();
-            if (!isInGroup(userId, groupId)) {
+            if (!isInGroup(senderId, groupId)) {
                 throw new ArgsInvalidException("不在群内");
             }
         }
@@ -163,17 +153,17 @@ public class ChannelRead {
         // 打包为用于推送的消息
         Date createdAt = new Date(System.currentTimeMillis());
         String uuid = UUID.randomUUID().toString();
-        FullMessage<ChatMsg> fullMessage = FullMessage.init(CHAT_MSG, userId, groupId, new ChatMsg(uuid, text, pictureUrl, createdAt));
+        FullMessage<ChatMsg> fullMessage = FullMessage.init(CHAT_MSG, senderId, groupId, new ChatMsg(uuid, text, pictureUrl, createdAt));
         // 推送消息
         if (toUserId == null) {
             // 群发送消息
-            chatMessageQueue.sendChatMessageQueue(fullMessage, groupId, false);
+            sendChatMsg(fullMessage, groupId, false);
         } else {
             // 好友发送消息
-            chatMessageQueue.sendChatMessageQueue(fullMessage, toUserId, true);
+            sendChatMsg(fullMessage, toUserId, true);
         }
         // 将消息存入数据库(mq)
-        MQSaveChatMsgDTO mqSaveChatMsgDTO = new MQSaveChatMsgDTO(new MessageDO(userId, text, pictureUrl, toUserId, groupId, createdAt), uuid);
+        MQSaveChatMsgDTO mqSaveChatMsgDTO = new MQSaveChatMsgDTO(new MessageDO(senderId, text, pictureUrl, toUserId, groupId, createdAt), uuid);
         saveChatMsgQueue.sendSaveChatMsgQueue(mqSaveChatMsgDTO);
         // 更新session于redis和db
         if (text != null && text.length() > 10) text = text.substring(0, 10);
@@ -181,6 +171,33 @@ public class ChannelRead {
         sessionDO.setUpdatedAt(createdAt);
         updateSessionQueue.sendUpdateSessionQueue(sessionDO);
         return Result.success();
+    }
+
+    private void sendChatMsg(FullMessage<ChatMsg> fullMessage, Long targetId, Boolean toUser) {
+        // 通过websocket发送给目标用户，如果发送成功返回true
+        if (toUser) {
+            // 发送给好友
+            // 通过websocket发送给目标用户，如果发送成功返回true
+            boolean isSuccess = ChannelUtil.sendPersonalMsg(Result.success(fullMessage), targetId);
+            // 好友不在线
+            if (!isSuccess) {
+                // 将消息存到redis
+                redisUtil.rightPushList(REDIS_UNREAD_MESSAGE, targetId, fullMessage);
+            }
+        } else {
+            // 发送到群
+            // 通过websocket发送给目标用户，如果发送成功返回true
+            List<Long> successUserIdList = ChannelUtil.sendGroupMessage(Result.success(fullMessage), targetId);
+            // 群友不在线
+            // 获得群友id列表
+            Result<?> result = RedisUtil.findJsonListWithCache(CACHE_GROUP_USER, targetId, Long.class, groupUserMapper::selectGroupUserIdByGroupId, CACHE_GROUP_USER_TTL);
+            List<Long> userIdList = (List<Long>) result.getData();
+            // 获得发送未成功的群友id列表
+            successUserIdList.forEach(userIdList::remove);
+            List<Long> unsuccessUserIdList = new ArrayList<>(successUserIdList);
+            // 存储到redis
+            unsuccessUserIdList.forEach(userid -> redisUtil.rightPushList(REDIS_UNREAD_MESSAGE, userid, fullMessage));
+        }
     }
 
     private boolean isFriend(Long userId, Long toUserId) {

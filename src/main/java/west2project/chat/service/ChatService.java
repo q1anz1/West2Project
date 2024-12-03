@@ -19,4 +19,6 @@ public interface ChatService {
     Result<?> getGroup();
 
     Result<?> joinGroup(Long groupId);
+
+    Result<?> unreadMessage();
 }

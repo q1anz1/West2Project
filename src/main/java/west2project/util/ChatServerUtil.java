@@ -8,10 +8,7 @@ import west2project.mapper.SocializingMapper;
 import west2project.pojo.DO.chat.FriendDO;
 import west2project.result.Result;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static west2project.context.RedisContexts.CACHE_FRIEND_LIST;
 import static west2project.context.RedisContexts.CACHE_FRIEND_LIST_TTL;
@@ -53,4 +50,5 @@ public class ChatServerUtil {
             friendMapper.batchDelete(remobeList);
         }
     }
+
 }

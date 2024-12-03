@@ -2,6 +2,7 @@ package west2project.websocket;
 
 
 import cn.hutool.extra.spring.SpringUtil;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -9,11 +10,15 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
+import west2project.mapper.UserMapper;
 import west2project.result.Result;
 import west2project.util.ChannelUtil;
 import west2project.util.JwtUtil;
 
+import java.util.Date;
 import java.util.Objects;
 
 @Slf4j
@@ -21,6 +26,7 @@ import java.util.Objects;
 public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
     private ChannelUtil channelUtil;
     private ChannelRead channelRead;
+    private UserMapper userMapper;
 
     public NettyWebSocketServerHandler() {
     }
@@ -30,6 +36,7 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         this.channelUtil = SpringUtil.getBean(ChannelUtil.class);
         this.channelRead = SpringUtil.getBean(ChannelRead.class);
+        this.userMapper = SpringUtil.getBean(UserMapper.class);
     }
 
     // channel连接
@@ -41,6 +48,10 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     // channel断开
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        // 记录下线时间
+        Channel channel = ctx.channel();
+        Attribute<Long> attribute = channel.attr(AttributeKey.valueOf(channel.id().toString()));
+        updateUserLastOnlineTime(attribute.get());
         // 移除在线用户并关闭
         channelUtil.removeChannel(ctx.channel());
     }
@@ -96,5 +107,10 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
             return null;
         }
         return tokenParams[1];
+    }
+
+    // 下线时更新最后上线时间
+    public void updateUserLastOnlineTime(Long userId) {
+        userMapper.updateLastOnlineTime(userId, new Date(System.currentTimeMillis()));
     }
 }

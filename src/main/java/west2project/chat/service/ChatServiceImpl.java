@@ -12,25 +12,17 @@ import west2project.mapper.*;
 import west2project.pojo.DO.chat.GroupDO;
 import west2project.pojo.DO.chat.MessageDO;
 import west2project.pojo.DO.chat.SessionDO;
-import west2project.pojo.DTO.chat.MQSaveChatMsgDTO;
 import west2project.pojo.VO.chat.SessionVO;
-import west2project.pojo.VO.chat.message.ChatMsg;
-import west2project.pojo.VO.chat.message.FullMessage;
+import west2project.pojo.VO.chat.UnreadMessageVO;
 import west2project.pojo.VO.user.UserInfoVO;
-import west2project.rabbitmq.ChatMessageQueue;
-import west2project.rabbitmq.SaveChatMsgQueue;
-import west2project.rabbitmq.UpdateSessionQueue;
 import west2project.result.Result;
 import west2project.util.*;
+
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
-import static west2project.context.CommonContexts.CHAT_IMAGE_BOX;
 import static west2project.context.CommonContexts.GROUP_AVATAR_BOX;
 import static west2project.context.RedisContexts.*;
-import static west2project.pojo.VO.chat.message.FullMessage.CHAT_MSG;
 
 @Slf4j
 @Service
@@ -218,4 +210,11 @@ public class ChatServiceImpl implements ChatService {
         return Result.success();
     }
 
+    @Override
+    public Result<?> unreadMessage() {
+        Long userId = JwtUtil.getUserId(httpServletRequest);
+        Date updatedAt = userMapper.selectUpdatedAtByUserId(userId);
+        return Result.success(new UnreadMessageVO(messageMapper.getUnreadFriendMessage(userId, updatedAt),
+                messageMapper.getUnreadGroupMessage(userId, updatedAt)));
+    }
 }
